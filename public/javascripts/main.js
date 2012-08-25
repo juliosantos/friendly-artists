@@ -110,9 +110,23 @@ var FriendlySongs = (function () {
 
   var init = function () {
     $( "#button" ).find( "button" ).click( function () {
-      $( "#button" ).slideUp();
-      $( "#progress" ).slideDown();
-      start();
+      var deferred = Facebook.authenticate();
+      var $button = $( this );
+
+      $button.button( "loading" );
+
+      deferred.done( function () {
+        $( "#login-modal" ).modal( "hide" );
+        $button.slideUp();
+        $( "#progress" ).slideDown();
+        start();
+      });
+
+      deferred.fail( function () {
+        $button.button( "repeat" );
+      });
+
+      e.preventDefault();
     });
   };
 
