@@ -1,4 +1,4 @@
-var FriendlySongs = (function () {
+var FriendlyArtists = (function () {
   var GRAPH_API_URL = "https://graph.facebook.com";
   var accessToken = "AAACEdEose0cBAPXZBd1lhUITDy3ZBKvzTcrnVwh4bUVfAMEVsFOF35ZAQiFZC8P0onyU8RgjqEYVxPvsOmDIM8sp60JCYSeOAZAMWuDPZC9gZDZD";
 
@@ -39,6 +39,57 @@ var FriendlySongs = (function () {
   var friendsProgress;
   var probingProgress;
   var songProgress;
+
+  var facebookReady = function () {
+    FB.init({
+      appId      : "507512692596435", // App ID
+      channelUrl : "http://friendlyartists.herokuapp.com/channel.html", // Channel File
+      status     : true, // check login status
+      cookie     : true, // enable cookies to allow the server to access the session
+      xfbml      : true  // parse XFBML
+    });
+    $( document ).trigger( "facebook:ready" );
+  };
+
+  var authenticate = function () {
+    var d = $.Deferred();
+
+    FB.login( function( response ) {
+      if ( response.authResponse && response.authResponse.accessToken ) {
+        accessToken = response.authResponse.accessToken;
+        d.resolve();
+      } else {
+        d.reject();
+      }
+    }, { scope: "friends_actions.music" } );    
+
+    return d;
+  };
+
+  var init = function () {
+    $( document ).ready( function () {
+      $( document ).on( "facebook:ready", function () {
+        $( "#button" ).find( "button" ).click( function (e) {
+          var deferred = authenticate();
+          var $button = $( this );
+
+          $button.button( "loading" );
+
+          deferred.done( function () {
+            $button.slideUp();
+            $( "#progress" ).slideDown();
+            start();
+          });
+
+          deferred.fail( function () {
+            $button.button( "repeat" );
+          });
+
+          e.preventDefault();
+        });
+      });
+    });
+  };
 
   var getSongs = function (user_id, deferred) {
     $.post( GRAPH_API_URL, {
@@ -108,28 +159,6 @@ var FriendlySongs = (function () {
 
   var friendsWithSongs = function () { return _.filter( friends, function (friend) { return friend.hasSongs; } ) };
 
-  var init = function () {
-    $( "#button" ).find( "button" ).click( function () {
-      var deferred = Facebook.authenticate();
-      var $button = $( this );
-
-      $button.button( "loading" );
-
-      deferred.done( function () {
-        $( "#login-modal" ).modal( "hide" );
-        $button.slideUp();
-        $( "#progress" ).slideDown();
-        start();
-      });
-
-      deferred.fail( function () {
-        $button.button( "repeat" );
-      });
-
-      e.preventDefault();
-    });
-  };
-
   var start = function () {
     var deferred = $.Deferred();
     var chain = deferred;
@@ -189,6 +218,7 @@ var FriendlySongs = (function () {
   });
 
   return {
-    init : init
+    init : init,
+    facebookReady : facebookReady
   }
 }());
