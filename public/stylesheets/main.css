@@ -14,43 +14,11 @@ table#artist-count td:first-child {
   width: 130px;
 }
 
-
-
-
-
-
-#controls {
+.accordion {
   display: none;
 }
 
-#friends, #friends-ranked {
-  display: none;
-}
 
-#friends-ranked a {
-  width: 110px;
-}
-
-#likes-modal ul {
-  list-style: none;
-  margin: 0;
-}
-#likes-modal ul li {
-  float: left;
-  margin: 0 2px 2px 0;
-}
-
-#likes-modal ul li a {
-  display: block;
-}
-
-.alert {
-  display: none;
-}
-
-.tooltip.in {
-  opacity: 1 !important;
-}
 
 td {
   vertical-align: middle !important;

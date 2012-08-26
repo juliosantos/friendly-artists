@@ -1,84 +1,38 @@
 var FriendlyArtists = (function () {
-  var GRAPH_API_URL = "https://graph.facebook.com";
-  var accessToken = "AAACEdEose0cBAPXZBd1lhUITDy3ZBKvzTcrnVwh4bUVfAMEVsFOF35ZAQiFZC8P0onyU8RgjqEYVxPvsOmDIM8sp60JCYSeOAZAMWuDPZC9gZDZD";
-
-  var friends = [];
-  var artists = [];
-
-  var Progress = function (options) {
-    this.counter = 0;
-    this.upperBound = options.upperBound;
-    this.completed = false;
-    this.bar = $( "#" + options.barID ).children().first();
-  };
-  Progress.prototype.increment = function () {
-    this.counter++;
-    if (this.bar != undefined) {
-      this.bar.width( this.percent() );
-    }
-    if (this.counter >= this.upperBound) {
-      this.complete();
-    }
-  };
-  Progress.prototype.percent = function () {
-    return this.counter * 100 / this.upperBound + "%"
-  };
-  Progress.prototype.complete = function () {
-    this.completed = true;
-    if (this.bar != undefined) {
-      this.bar.width( "100%" );
-      var that = this;
-      setTimeout( function () {
-        that.bar.addClass( "bar-success" );
-        that.bar.parent().removeClass( "active" );
-        that.bar.parent().removeClass( "progress-striped" );
-      }, 500 );
-    }
-  }
+  var depth = 1;
 
   var friendsProgress;
   var probingProgress;
   var songProgress;
 
-  var facebookReady = function () {
-    FB.init({
-      appId      : "507512692596435", // App ID
-      channelUrl : "http://friendlyartists.herokuapp.com/channel.html", // Channel File
-      status     : true, // check login status
-      cookie     : true, // enable cookies to allow the server to access the session
-      xfbml      : true  // parse XFBML
-    });
-    $( document ).trigger( "facebook:ready" );
-  };
-
-  var authenticate = function () {
-    var d = $.Deferred();
-
-    FB.login( function( response ) {
-      if ( response.authResponse && response.authResponse.accessToken ) {
-        accessToken = response.authResponse.accessToken;
-        d.resolve();
-      } else {
-        d.reject();
-      }
-    }, { scope: "friends_actions.music" } );    
-
-    return d;
-  };
-
   var init = function () {
     $( document ).ready( function () {
       $( document ).on( "facebook:ready", function () {
-        $( "#button" ).find( "button" ).click( function (e) {
-          var deferred = authenticate();
-          var $button = $( this );
+        $( "form" ).submit( function (e) {
+          var $button = $( "button" );
+          var $input = $button.siblings( "input[type=text]" );
 
           $button.button( "loading" );
+          $input.attr( "disabled", "disabled" );
+          $( "#results" ).hide();
+          $( "table#artist-count" ).children( "tbody" ).empty();
+
+          depth = parseInt( $input.val() );
+
+          var deferred = Facebook.authenticate();
 
           deferred.done( function () {
-            $button.slideUp();
             $( "#progress" ).slideDown();
-            start();
+
+            getFriends()
+              .pipe( probeSongs )
+              .pipe( fillAccordion )
+              .pipe( getSongs )
+              .done( function () {
+                $button.button( "reset" );
+                $input.removeAttr( "disabled" );
+                fillTable( );
+              });
           });
 
           deferred.fail( function () {
@@ -91,22 +45,21 @@ var FriendlyArtists = (function () {
     });
   };
 
-  var getSongs = function (user_id, deferred) {
-    $.post( GRAPH_API_URL, {
-      access_token : accessToken,
-      batch : JSON.stringify( [
-        { "method" : "GET", "name" : "xxx", "relative_url" : user_id + "/music.listens?limit=300" },
-        { "method" : "GET", "relative_url" : "?ids={result=xxx:$.data..song.id}&fields=data" }
-      ] )
-    }, function (response) {
-      artists.push( _.uniq( jsonPath( JSON.parse( JSON.parse(response)[1]["body"] ), "$..musician[0][name]" ) ) );
-    }).complete( function () {
-      songProgress.increment();
-      if (songProgress.completed) {
-        deferred.resolve();
-      }
+  var getFriends = function () {
+    var deferred = $.Deferred();
+
+    friendsProgress = new Progress( {upperBound : 1, barID : "progress-friends"} );
+    $.getJSON( Facebook.GRAPH_API_URL + "/me/friends", { access_token : Facebook.accessToken() }, function (response) {
+      Friend.createFromFacebook( response.data );
+      friendsProgress.complete();
+      deferred.resolve();
+    }).error( function () {
+      deferred.reject();
     });
+
+    return deferred;
   };
+
 
   var probeSongs = function () {
     var deferred = $.Deferred();
@@ -119,8 +72,8 @@ var FriendlyArtists = (function () {
       var batch = _.map( friends_ids, function (friend_id) {
         return { "method" : "GET", "relative_url" : friend_id + "/music.listens?limit=1" }
       });
-      $.post( GRAPH_API_URL, {
-        access_token : accessToken,
+      $.post( Facebook.GRAPH_API_URL, {
+        access_token : Facebook.accessToken(),
         batch : JSON.stringify( batch )
       }, function (response) {
         _.each( JSON.parse( response ), function (friend_songs, index) {
@@ -142,83 +95,81 @@ var FriendlyArtists = (function () {
     return deferred;
   };
 
-  var getFriends = function () {
-    var deferred = $.Deferred();
+  var getSongs = function () {
+    var d = $.Deferred();
 
-    friendsProgress = new Progress( {upperBound : 1, barID : "progress-friends"} );
-    $.getJSON( GRAPH_API_URL + "/me/friends", { access_token : accessToken }, function (response) {
-      friends = response.data;
-      friendsProgress.complete();
-      deferred.resolve();
-    }).error( function () {
-      deferred.reject();
+    songProgress = new Progress( {upperBound : Friend.withSongs().length * depth, barID : "progress-songs"} );
+    _.each( Friend.withSongs(), function (friend) {
+      getFriendSongs( friend.id, d, depth );
     });
 
-    return deferred;
+    return d;
   };
 
-  var friendsWithSongs = function () { return _.filter( friends, function (friend) { return friend.hasSongs; } ) };
+  var getFriendSongs = function (user_id, deferred, depth) {
+    var offset = 300 * (depth - 1);
+    $.post( Facebook.GRAPH_API_URL, {
+      access_token : Facebook.accessToken(),
+      batch : JSON.stringify( [
+        { "method" : "GET", "name" : "xxx", "relative_url" : user_id + "/music.listens?limit=300&offset=" + offset },
+        { "method" : "GET", "relative_url" : "?ids={result=xxx:$.data..song.id}&fields=data" }
+      ] )
+    }, function (response) {
+      var artists = jsonPath( JSON.parse( JSON.parse( response )[1]["body"] ), "$..musician[0][name]" );
+      if (artists !== false ) {
+        Friend.find( user_id ).addArtists( artists );
+      }
+    }).complete( function () {
+      songProgress.increment();
+      if (songProgress.completed) {
+        deferred.resolve();
+      }
+      if (depth > 1) {
+        getFriendSongs( user_id, deferred, depth - 1 );
+      }
+    });
+  };
 
-  var start = function () {
-    var deferred = $.Deferred();
-    var chain = deferred;
-
-    chain = chain.pipe( getFriends );
-
-    chain = chain.pipe( probeSongs );
-
-    chain = chain.pipe( function () {
-      var d = $.Deferred();
-      songProgress = new Progress( {upperBound : friendsWithSongs().length, barID : "progress-songs"} );
-      _.each( friendsWithSongs(), function (friend) {
-        getSongs( friend.id, d );
+  var fillAccordion = function () {
+    var friendDebugTemplate = $( "#friend-debug" ).html();
+    var $p = $( ".accordion-inner" ).children( "p" );
+    var friendsWithSongs = _.sortBy( Friend.withSongs(), function (friend) { return friend.name });
+    _.each( friendsWithSongs, function (friend, index) {
+      var a = _.template( friendDebugTemplate, {
+        id : friend.id,
+        name : friend.name
       });
-      return d;
+      $p.append( a );
+      if (index + 1 < friendsWithSongs.length) {
+        $p.append( "&nbsp;&middot;&nbsp;" );
+      }
     });
-
-    chain.done( function () {
-      artists = _.sortBy( _.groupBy( _.flatten(artists), function (artist) { return artist; } ), function (group) { return group.length; }).reverse();
-      fillTable();
-    });
-
-    deferred.resolve();
+    $( ".accordion" ).slideDown( 600 ); 
   };
 
-  var fillTable = function () {
+  var fillTable = function (sorted_artists) {
+    var artists = _.map( friends, function (friend) { return friend.artists });
+    var sorted_artists = _.sortBy( _.groupBy( _.flatten( artists ), function (artist) { return artist; } ), function (group) { return group.length; }).reverse();
     var artistRowTemplate = $( "#artist-row" ).html();
     var $table = $( "table#artist-count" );
     var $tbody = $table.children( "tbody" );
-    _.each( artists, function (artist) {
+    _.each( sorted_artists, function (artist) {
+      var friendNamesWithArtist = _.pluck( Friend.withArtist( artist[0] ), "name" );
       var tr = _.template( artistRowTemplate, {
         name : artist[0],
-        count : artist.length
+        count : artist.length,
+        friends : friendNamesWithArtist.sort().join( ", " )
       });
       $tbody.append( tr );
     });
+    $tbody.find( "a" ).tooltip( {placement : "right"} );
 
     $( "#progress" ).slideUp( 600 );
+    $( ".accordion-body" ).collapse( "hide" );
     $( "#results" ).show();
   };
 
-  _.mixin({
-    inGroupsOf: function(array, number, fillWith) {
-        fillWith = fillWith || null;
-        var index = -number, slices = [];
-
-        if (number < 1) return array;
-
-        while ((index += number) < array.length) {
-            var s = array.slice(index, index + number);
-            while(s.length < number)
-                s.push(fillWith);
-            slices.push(s);
-        }
-        return slices;
-    }
-  });
-
   return {
-    init : init,
-    facebookReady : facebookReady
+    init : init
   }
 }());
