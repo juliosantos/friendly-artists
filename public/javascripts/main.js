@@ -8,20 +8,21 @@ var FriendlyArtists = (function () {
   var init = function () {
     $( document ).ready( function () {
       $( document ).on( "facebook:ready", function () {
+        
+        $( "#controls" ).find( "form" ).slideDown();
+
         $( "form" ).submit( function (e) {
           var $button = $( "button" );
           var $input = $button.siblings( "input[type=text]" );
 
           $button.button( "loading" );
           $input.attr( "disabled", "disabled" );
-          $( "#results" ).hide();
-          $( "table#artist-count" ).children( "tbody" ).empty();
-
           depth = parseInt( $input.val() );
 
           var deferred = Facebook.authenticate();
 
           deferred.done( function () {
+            $( "#controls" ).find( "form" ).slideUp();
             $( "#progress" ).slideDown();
 
             getFriends()
@@ -29,8 +30,6 @@ var FriendlyArtists = (function () {
               .pipe( fillAccordion )
               .pipe( getSongs )
               .done( function () {
-                $button.button( "reset" );
-                $input.removeAttr( "disabled" );
                 fillTable( );
               });
           });

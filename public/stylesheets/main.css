@@ -3,6 +3,10 @@ h1 {
   margin-bottom: 20px;
 }
 
+div#controls form {
+  display: none;
+}
+
 div#progress, div#results {
   display: none;
 }
@@ -18,7 +22,9 @@ table#artist-count td:first-child {
   display: none;
 }
 
-
+.tooltip-inner {
+  text-align: left !important;
+}
 
 td {
   vertical-align: middle !important;

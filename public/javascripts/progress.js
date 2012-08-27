@@ -27,4 +27,5 @@ Progress.prototype.complete = function () {
       that.bar.parent().removeClass( "progress-striped" );
     }, 500 );
   }
-}
+};
+
