@@ -165,7 +165,9 @@ var FriendlyArtists = (function () {
     });
     $tbody.find( "a" ).tooltip( {placement : "right"} );
 
-    $( "#progress" ).slideUp( 600 );
+    $( "#progress" ).slideUp( 600, function () {
+      $tbody.find( "a" ).first().tooltip( "toggle" );
+    });
     $( ".accordion-body" ).collapse( "hide" );
     $( "#results" ).show();
   };
