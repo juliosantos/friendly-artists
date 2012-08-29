@@ -22,7 +22,9 @@ var FriendlyArtists = (function () {
           var deferred = Facebook.authenticate();
 
           deferred.done( function () {
-            $( "#controls" ).find( "form" ).slideUp();
+            $( "#controls" ).find( "form" ).slideUp( function () {
+              $("#intro").collapse("hide");
+            });
             $( "#progress" ).slideDown();
 
             getFriends()
@@ -110,8 +112,8 @@ var FriendlyArtists = (function () {
     $.post( Facebook.GRAPH_API_URL, {
       access_token : Facebook.accessToken(),
       batch : JSON.stringify( [
-        { "method" : "GET", "name" : "xxx", "relative_url" : user_id + "/music.listens?limit=300&offset=" + offset },
-        { "method" : "GET", "relative_url" : "?ids={result=xxx:$.data..song.id}&fields=data" }
+        { "method" : "GET", "name" : "songs", "relative_url" : user_id + "/music.listens?limit=300&offset=" + offset },
+        { "method" : "GET", "relative_url" : "?ids={result=songs:$.data..song.id}&fields=data" }
       ] )
     }, function (response) {
       var artists = jsonPath( JSON.parse( JSON.parse( response )[1]["body"] ), "$..musician[0][name]" );
@@ -131,7 +133,7 @@ var FriendlyArtists = (function () {
 
   var fillAccordion = function () {
     var friendDebugTemplate = $( "#friend-debug" ).html();
-    var $p = $( ".accordion-inner" ).children( "p" );
+    var $p = $( "#friends-accordion" ).find( ".accordion-inner" ).children( "p" );
     var friendsWithSongs = _.sortBy( Friend.withSongs(), function (friend) { return friend.name });
     _.each( friendsWithSongs, function (friend, index) {
       var a = _.template( friendDebugTemplate, {
@@ -143,7 +145,7 @@ var FriendlyArtists = (function () {
         $p.append( "&nbsp;&middot;&nbsp;" );
       }
     });
-    $( ".accordion" ).slideDown( 600 ); 
+    $( "#friends-accordion" ).slideDown( 600 ); 
   };
 
   var fillTable = function (sorted_artists) {

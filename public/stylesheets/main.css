@@ -18,7 +18,7 @@ table#artist-count td:first-child {
   width: 130px;
 }
 
-.accordion {
+#friends-accordion {
   display: none;
 }
 

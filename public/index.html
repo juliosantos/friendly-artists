@@ -28,14 +28,32 @@
 
     <div id="controls" class="row">
       <div class="span9">
-          <p>Nihil brooklyn iphone labore locavore, kale chips synth semiotics. Laboris nostrud before they sold out, helvetica pour-over flexitarian aliqua. Ethical food truck delectus, aesthetic ex authentic synth hoodie messenger bag excepteur brooklyn terry richardson consequat sed odd future. Blog laboris +1</p>
-          <p>Polaroid vinyl craft beer stumptown quinoa qui scenester aliqua before they sold out. Shoreditch street art farm-to-table master cleanse officia proident voluptate, helvetica tumblr nostrud nihil mixtape american apparel. Accusamus craft beer voluptate sartorial godard pariatur. Vice PBR dolore pork belly next level.</p>
-        <form class="well form-inline">
-          <label for"depth">Depth:</label>
-          <input id="depth" type="text" value="3" class="input-mini">
-          <button class="btn btn-primary" type="submit" data-loading-text="Reticulating splines..." data-repeat-text="Oops. Pleasy try again.">Go get 'em artists!</button>
-        </form>
-        <hr />
+        <div class="accordion">
+          <div class="accordion-group">
+            <div class="accordion-heading">
+              <a class="accordion-toggle" data-toggle="collapse" href="#intro">
+                Briefing
+              </a>
+            </div>
+            <div id="intro" class="accordion-body in collapse">
+              <div class="accordion-inner">
+                <p>The first step is to get a list of all your friends. This is done via the <a href="http://developers.facebook.com/docs/reference/api/user/#friends" target="_blank">Friends Connection</a>.</p>
+                <pre>https://graph.facebook.com/me/friends?access_token=DAT_ACCESS_TOKEN</pre>
+                <p>In order to know which friends listen to music on Facebook-enabled players, we will query the <a href="https://developers.facebook.com/docs/opengraph/music/" target="_blank">music.listens Connection</a>, telling Facebook to return only one element with <code>limit=1</code>, so the responses are fast.</p>
+                <pre>https://graph.facebook.com/DAT_FRIEND_ID/music.listens?limit=1&access_token=DAT_ACCESS_TOKEN</pre>
+                <p>Now we know which friends listen to music. However, the <code>music.listens</code> Connection doesn't return artist data. So we need to go deeper. We will be using a <a href="http://developers.facebook.com/docs/reference/api/batch/" target="_blank">Batch Request</a> with two queries for this. The first one will be the same as above, with a larger limit since we're not just probing anymore. The second query gets all the metadata for every song id returned by the first. <em>(abridged below for clarity)</em>.</p>
+                <pre>{ "name" : "songs", "relative_url" : user_id + "/music.listens?limit=300 },<br />{ "relative_url" : "?ids={result=songs:$.data..song.id}&fields=data" }</pre>
+                <p>The second query above uses <a href="http://goessner.net/articles/JsonPath/" target="_blank">JSONPath</a>. <code>{result=songs:$.data..song.id}&fields=data" }</code> means «from the result of the query named <em>songs</em> (this is the first query of the batch; notice the <em>name</em> parameter), extract every <strong>id</strong> value for <strong>song</strong> nodes which are descendants of the root <strong>$</strong>'s child <strong>data</strong>».
+                <form class="well form-inline">
+                  <p><strong>Now that the basics are covered, let's hit that button with gusto.</strong></p>
+                  <label for"depth">Depth:</label>
+                  <input id="depth" type="text" value="3" class="input-mini">
+                  <button class="btn btn-primary" type="submit" data-loading-text="Reticulating splines..." data-repeat-text="Oops. Pleasy try again.">Go get 'em artists!</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -56,7 +74,7 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="row" id="friends-accordion">
       <div class="span9">
         <div class="accordion">
           <div class="accordion-group">
