@@ -37,7 +37,8 @@
             </div>
             <div id="intro" class="accordion-body in collapse">
               <div class="accordion-inner">
-                <p>The first step is to get a list of all your friends. This is done via the <a href="http://developers.facebook.com/docs/reference/api/user/#friends" target="_blank">Friends Connection</a> using the <a href="https://developers.facebook.com/docs/authentication/client-side/" target="_blank">access token</a> we get when you log in to the app, i.e., press the button below.</p>
+                <p><strong>Summary:</strong> We'll find all your friends and figure out which of those listen to songs on Spotify, Rdio, Deezer, etc. Then we'll take those friends who do listen to music and figure out which artists they're into.</p>
+                <p>The first step is to get a list of all your friends. This is done via the <a href="http://developers.facebook.com/docs/reference/api/user/#friends" target="_blank">Friends Connection</a> using the <a href="https://developers.facebook.com/docs/authentication/client-side/" target="_blank">access token</a> we get when you log in to the app.</p>
                 <pre>https://graph.facebook.com/me/friends?access_token=DAT_ACCESS_TOKEN</pre>
                 <p>In order to know which friends listen to music on Facebook-enabled players, we will query the <a href="https://developers.facebook.com/docs/opengraph/music/" target="_blank">music.listens Connection</a> for every one of your friends, telling Facebook to return only one song with <code>limit=1</code> for faster responses.</p>
                 <pre>https://graph.facebook.com/DAT_FRIEND_ID/music.listens?limit=1&access_token=DAT_ACCESS_TOKEN</pre>
