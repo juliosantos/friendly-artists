@@ -11,11 +11,15 @@ div#progress, div#results {
   display: none;
 }
 table#artist-count td:first-child {
-  width: 80%;
+  width: 30%;
 }
 
 #login {
   width: 130px;
+}
+
+#results a, #results a:hover {
+  text-decoration: none;
 }
 
 #friends-accordion {
@@ -24,6 +28,10 @@ table#artist-count td:first-child {
 
 .tooltip-inner {
   text-align: left !important;
+}
+
+.tooltip.in {
+  opacity: 1 !important;
 }
 
 td {

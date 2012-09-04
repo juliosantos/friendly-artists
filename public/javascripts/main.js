@@ -31,9 +31,7 @@ var FriendlyArtists = (function () {
               .pipe( probeSongs )
               .pipe( fillAccordion )
               .pipe( getSongs )
-              .done( function () {
-                fillTable( );
-              });
+              .done( fillTable );
           });
 
           deferred.fail( function () {
@@ -148,9 +146,10 @@ var FriendlyArtists = (function () {
     $( "#friends-accordion" ).slideDown( 600 ); 
   };
 
-  var fillTable = function (sorted_artists) {
+  var fillTable = function () {
     var artists = _.map( friends, function (friend) { return friend.artists });
     var sorted_artists = _.sortBy( _.groupBy( _.flatten( artists ), function (artist) { return artist; } ), function (group) { return group.length; }).reverse();
+    var friendImageTemplate = $( "#friend-image" ).html();
     var artistRowTemplate = $( "#artist-row" ).html();
     var $table = $( "table#artist-count" );
     var $tbody = $table.children( "tbody" );
@@ -162,12 +161,18 @@ var FriendlyArtists = (function () {
         friends : friendNamesWithArtist.sort().join( ", " )
       });
       $tbody.append( tr );
+      _.each( Friend.withArtist( artist[0] ), function (friend) {
+        var img = _.template( friendImageTemplate, {
+          id : friend.id,
+          name : friend.name
+        });
+        $table.find("tr:last-child td:last-child").append( img );
+      });
     });
-    $tbody.find( "a" ).tooltip( {placement : "right"} );
 
-    $( "#progress" ).slideUp( 600, function () {
-      $tbody.find( "a" ).first().tooltip( "toggle" );
-    });
+    $table.find( "img" ).tooltip( {delay : 0, animation : false} );
+
+    $( "#progress" ).slideUp( 600 );
     $( ".accordion-body" ).collapse( "hide" );
     $( "#results" ).show();
   };
