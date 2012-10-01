@@ -1,6 +1,12 @@
 # Friendly Artists  
 
-I created this demo app to support my workshop at Social Media Week Berlin, «Fetching Open Graph Data — A Basic Introduction for Curious Developers»
+## About
+
+Friendly Artists is a very basic social music recommendation system. It fetches your Facebook friends and their Open Graph `music.listens` published actions. Upon inspecting the related song objects, it counts artist frequency to determine a recommendation order.
+
+## Context
+
+I created this demo app to support my workshop at Social Media Week Berlin, «Fetching Open Graph Data — A Basic Introduction for Curious Developers». Please note that the app is not to be considered production-ready.
 
 The app is ready for Heroku deployment, requiring only 1 web dyno.
 
