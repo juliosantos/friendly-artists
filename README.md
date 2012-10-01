@@ -8,7 +8,7 @@ Friendly Artists is a very basic social music recommendation system. It fetches 
 
 I created this demo app to support my workshop at Social Media Week Berlin, «Fetching Open Graph Data — A Basic Introduction for Curious Developers». Please note that the app is not to be considered production-ready.
 
-The app is ready for Heroku deployment, requiring only 1 web dyno.
+The app is ready for Heroku deployment, requiring only 1 web dyno (and that a Facebook app is created and connected to this).
 
 A live deployment is available at [friendlyartists.herokuapp.com](http://friendlyartists.herokuapp.com)
 
