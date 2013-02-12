@@ -111,10 +111,15 @@ var FriendlyArtists = (function () {
       access_token : Facebook.accessToken(),
       batch : JSON.stringify( [
         { "method" : "GET", "name" : "songs", "relative_url" : user_id + "/music.listens?limit=300&offset=" + offset },
-        { "method" : "GET", "relative_url" : "?ids={result=songs:$.data..song.id}&fields=data" }
+        { "method" : "GET", "relative_url" : "?ids={result=songs:$.data..song.id}" }
       ] )
     }, function (response) {
-      var artists = jsonPath( JSON.parse( JSON.parse( response )[1]["body"] ), "$..musician[0][name]" );
+      var artists;
+      try {
+        artists = jsonPath( JSON.parse( JSON.parse( response )[1]["body"] ), "$..musician[0][name]" );
+      } catch (e) {
+        console.log( e );
+      }
       if (artists !== false ) {
         Friend.find( user_id ).addArtists( artists );
       }

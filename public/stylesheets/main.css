@@ -37,3 +37,8 @@ table#artist-count td:first-child {
 td {
   vertical-align: middle !important;
 }
+
+table#artist-count a img {
+  width: 35px;
+  height: 35px;
+}
