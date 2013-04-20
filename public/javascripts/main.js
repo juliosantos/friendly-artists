@@ -52,7 +52,10 @@ var FriendlyArtists = (function () {
       Friend.createFromFacebook( response.data );
       friendsProgress.complete();
       deferred.resolve();
-    }).error( function () {
+    }).error( function (error) {
+      alert( JSON.parse( error.responseText ).error.message );
+      window.location = window.location;
+
       deferred.reject();
     });
 
@@ -74,13 +77,11 @@ var FriendlyArtists = (function () {
       $.post( Facebook.GRAPH_API_URL, {
         access_token : Facebook.accessToken(),
         batch : JSON.stringify( batch )
-      }, function (response) {
-        _.each( JSON.parse( response ), function (friend_songs, index) {
-          if (friend_songs != null) {
-            var songs = JSON.parse( friend_songs["body"] ).data;
-            if (songs.length > 0) {
-              friends[groupIndex * 50 + index].hasSongs = true;
-            }
+      }, function (responses) {
+        _.each( responses, function (friend_response, index) {
+          var song = JSON.parse( friend_response.body ).data;
+          if (song && song.length > 0) {
+            friends[groupIndex * 50 + index].hasSongs = true;
           }
         });
       }).complete( function () {
@@ -116,9 +117,8 @@ var FriendlyArtists = (function () {
     }, function (response) {
       var artists;
       try {
-        artists = jsonPath( JSON.parse( JSON.parse( response )[1]["body"] ), "$..musician[0][name]" );
+        artists = jsonPath( JSON.parse( response[1].body ), "$..musician[0][name]" );
       } catch (e) {
-        console.log( e );
       }
       if (artists !== false ) {
         Friend.find( user_id ).addArtists( artists );
