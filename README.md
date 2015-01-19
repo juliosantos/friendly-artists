@@ -10,8 +10,6 @@ I created this demo app to support my workshop at Social Media Week Berlin, «Fe
 
 The app is ready for Heroku deployment, requiring only 1 web dyno (and that a Facebook app is created and connected to this).
 
-A live deployment is available at [friendlyartists.herokuapp.com](http://friendlyartists.herokuapp.com)
-
 # License
 
 Copyright (c) 2012 Júlio Santos
